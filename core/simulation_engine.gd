@@ -12,7 +12,7 @@ static func simulate(grid: GridModel, level: LevelData) -> SimulationResult:
 		start[train.id] = source.cell
 	result.steps.append(start)
 
-	var max_steps := grid.get_used_budget() + 2
+	var max_steps := grid.get_used_budget() * grid.max_edges_per_cell + 2
 	while not _all_done(states):
 		if result.steps.size() > max_steps:
 			return result.fail(SimulationResult.Outcome.LOOP, _first_moving(states))
@@ -57,10 +57,7 @@ static func _advance(grid: GridModel, train: Train, state: Dictionary) -> Simula
 			return SimulationResult.Outcome.AMBIGUOUS_DEPARTURE
 		exit_edge = _edge_towards(cell, exits[0])
 	else:
-		var piece := grid.get_piece(cell)
-		if piece == null:
-			return SimulationResult.Outcome.DEAD_END
-		exit_edge = piece.other_edge(state["entry"])
+		exit_edge = grid.exit_edge(cell, state["entry"])
 		if exit_edge == -1:
 			return SimulationResult.Outcome.DEAD_END
 

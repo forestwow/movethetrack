@@ -71,3 +71,8 @@ func test_create_grid_returns_a_fresh_grid_each_time():
 	var first := level.create_grid()
 	first.connect_cells(Vector2i(3, 4), Vector2i(4, 4))
 	assert_false(level.create_grid().has_track(Vector2i(3, 4)))
+
+
+func test_create_grid_raises_the_edge_limit_when_the_switch_is_available():
+	assert_eq(LevelData.load_from_file(FULL).create_grid().max_edges_per_cell, 3)
+	assert_eq(LevelData.load_from_file(LEVEL_01).create_grid().max_edges_per_cell, 2)

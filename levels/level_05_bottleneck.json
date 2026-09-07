@@ -1,0 +1,20 @@
+{
+  "id": "level_05_bottleneck",
+  "segment_budget": 26,
+  "obstacles": [
+    {"x":4,"y":0},{"x":4,"y":1},{"x":4,"y":2},{"x":4,"y":3},{"x":4,"y":4},{"x":4,"y":6},{"x":4,"y":7},{"x":4,"y":8},{"x":4,"y":9},
+    {"x":6,"y":0},{"x":6,"y":1},{"x":6,"y":2},{"x":6,"y":3},{"x":6,"y":4},{"x":6,"y":6},{"x":6,"y":7},{"x":6,"y":8},{"x":6,"y":9}
+  ],
+  "stations": [
+    {"id":"A","x":0,"y":5,"color":"red","role":"source"},
+    {"id":"C","x":9,"y":5,"color":"red","role":"destination"},
+    {"id":"B","x":9,"y":3,"color":"blue","role":"source"},
+    {"id":"D","x":0,"y":3,"color":"blue","role":"destination"}
+  ],
+  "trains": [
+    {"id":"train_1","start_station":"A","target_station":"C"},
+    {"id":"train_2","start_station":"B","target_station":"D"}
+  ],
+  "available_tools": ["switch"],
+  "win_conditions": ["basic_delivery"]
+}

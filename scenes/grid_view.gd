@@ -10,6 +10,7 @@ const GRASS_LINE := Color("#568139")
 const BALLAST := Color("#8f8676")
 const SLEEPER := Color("#5e4129")
 const RAIL := Color("#e6e6da")
+const RAIL_IDLE := Color("#6b6559")
 
 const TUFTS := [
 	[Vector2(14, 22), Vector2(52, 46), Vector2(33, 63)],
@@ -36,6 +37,8 @@ var grid: GridModel
 var editable := true
 
 var _drag_cell := NO_CELL
+var _press_cell := NO_CELL
+var _dragged := false
 var _train_colors := {}
 var _train_cells := {}
 var _train_headings := {}
@@ -89,13 +92,21 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
 		var cell := cell_at(get_local_mouse_position())
 		if event.button_index == MOUSE_BUTTON_LEFT:
-			_drag_cell = cell if event.pressed else NO_CELL
+			if event.pressed:
+				_drag_cell = cell
+				_press_cell = cell
+				_dragged = false
+			else:
+				if not _dragged and cell == _press_cell:
+					grid.cycle_switch(cell)
+				_drag_cell = NO_CELL
 		elif event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
 			grid.remove_track(cell)
 
 	elif event is InputEventMouseMotion and _drag_cell != NO_CELL:
 		var cell := cell_at(get_local_mouse_position())
 		if cell != _drag_cell:
+			_dragged = true
 			if grid.is_inside(cell):
 				grid.connect_cells(_drag_cell, cell)
 			_drag_cell = cell
@@ -159,12 +170,21 @@ func _draw_rails(cell: Vector2i) -> void:
 		for distance in [0.26, 0.62, 0.96]:
 			var at: Vector2 = center + dir * CELL / 2.0 * distance
 			draw_line(at - perp * CELL * 0.145, at + perp * CELL * 0.145, SLEEPER, 5.0)
+	var routed := _routed_edges(cell, edges)
 	for edge in edges:
 		var dir := Vector2(TrackPiece.direction(edge))
 		var perp := Vector2(-dir.y, dir.x)
+		var color: Color = RAIL if routed.has(edge) else RAIL_IDLE
 		for side in [-1.0, 1.0]:
 			var from: Vector2 = center + perp * offset * side
-			draw_line(from, from + dir * CELL / 2.0, RAIL, 3.0)
+			draw_line(from, from + dir * CELL / 2.0, color, 3.0)
+
+
+func _routed_edges(cell: Vector2i, edges: Array) -> Array:
+	var config := grid.get_switch(cell)
+	if config.is_empty():
+		return edges
+	return [config["toe"], config["setting"]]
 
 
 func _draw_tree(cell: Vector2i) -> void:

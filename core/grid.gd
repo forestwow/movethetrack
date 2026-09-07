@@ -8,8 +8,10 @@ const MAX_EDGES_PER_CELL := 2
 var width: int
 var height: int
 var segment_budget: int
+var max_edges_per_cell := MAX_EDGES_PER_CELL
 
 var _edges := {}
+var _switches := {}
 var _obstacles := {}
 var _stations := {}
 
@@ -109,6 +111,53 @@ func connect_cells(from: Vector2i, to: Vector2i) -> bool:
 	return true
 
 
+func exit_edge(cell: Vector2i, entry: TrackPiece.Edge) -> int:
+	var edges := _edges_of(cell)
+	if not edges.has(entry):
+		return -1
+	if edges.size() == 2:
+		return edges[0] if edges[1] == entry else edges[1]
+	if edges.size() == 3:
+		var config := get_switch(cell)
+		return config["setting"] if entry == config["toe"] else config["toe"]
+	return -1
+
+
+func get_switch(cell: Vector2i) -> Dictionary:
+	var configs := get_switch_configs(cell)
+	if configs.is_empty():
+		return {}
+	return configs[_switches.get(cell, 0) % configs.size()]
+
+
+func get_switch_configs(cell: Vector2i) -> Array:
+	var edges := _edges_of(cell)
+	if edges.size() != 3:
+		return []
+	var configs := []
+	for toe in edges:
+		for setting in edges:
+			if setting != toe:
+				configs.append({"toe": toe, "setting": setting})
+	return configs
+
+
+func set_switch(cell: Vector2i, toe: TrackPiece.Edge, setting: TrackPiece.Edge) -> void:
+	var index := get_switch_configs(cell).find({"toe": toe, "setting": setting})
+	if index == -1:
+		return
+	_switches[cell] = index
+	track_changed.emit(cell)
+
+
+func cycle_switch(cell: Vector2i) -> void:
+	var configs := get_switch_configs(cell)
+	if configs.is_empty():
+		return
+	_switches[cell] = (_switches.get(cell, 0) + 1) % configs.size()
+	track_changed.emit(cell)
+
+
 func get_station_exits(station_cell: Vector2i) -> Array[Vector2i]:
 	var exits: Array[Vector2i] = []
 	for edge in TrackPiece.Edge.values():
@@ -125,6 +174,7 @@ func remove_track(cell: Vector2i) -> void:
 	for edge in _edges_of(cell):
 		_remove_edge(cell + TrackPiece.direction(edge), TrackPiece.opposite(edge))
 	_edges.erase(cell)
+	_switches.erase(cell)
 	track_changed.emit(cell)
 	for neighbour in neighbours:
 		track_changed.emit(neighbour)
@@ -151,12 +201,13 @@ func _has_edge(cell: Vector2i, edge: TrackPiece.Edge) -> bool:
 
 
 func _is_full(cell: Vector2i) -> bool:
-	return not is_station(cell) and _edge_count(cell) >= MAX_EDGES_PER_CELL
+	return not is_station(cell) and _edge_count(cell) >= max_edges_per_cell
 
 
 func clear_track() -> void:
 	var cleared := get_track_cells()
 	_edges.clear()
+	_switches.clear()
 	for cell in cleared:
 		track_changed.emit(cell)
 

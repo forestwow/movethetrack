@@ -249,3 +249,49 @@ bez regenerowania grafik. Prawdziwe sprite'y pixel art zostają jako opcja, jeś
 `StyleBoxTexture` 9-patch — jasne krawędzie u góry i po lewej, ciemne u dołu i po prawej,
 odwrócone w stanie wciśniętym. `StyleBoxFlat` ma tylko jeden kolor ramki, więc nie da się nim
 zrobić prawdziwego fazowania.
+
+## D20 — Rozjazd opisany parą (iglica, nastawa), konfigurowany kliknięciem
+
+**Realizuje:** M14 z TECH_SPEC sekcji 5, wcześniej niż M13 (skrzyżowanie).
+
+**Znaleziony problem:** konfiguracji rozjazdu **nie da się wyprowadzić z geometrii**. W poziomie
+`level_05_bottleneck` oba rozjazdy — `(3,5)` i `(7,5)` — mają identyczny zestaw krawędzi
+`{W, E, N}`, ale muszą zachowywać się różnie: zachodni potrzebuje `W→E` i `E→N`, wschodni `W→E`
+i `N→W`. Sprawdzone i odrzucone reguły bezstanowe: „jedź prosto jeśli możesz", „zawsze skręcaj",
+„aktywna para krawędzi z dopełnieniem po trzeciej" — każda obsługuje jeden z tych rozjazdów i
+wykłada się na drugim.
+
+**Model:** komórka z trzema krawędziami przechowuje **iglicę** (krawędź, od której trasa się
+rozwidla) i **nastawę** (jedną z dwóch pozostałych). Routing jest w pełni deterministyczny:
+- wjazd od iglicy → wyjazd na nastawę (jazda ostrzem)
+- wjazd od którejkolwiek gałęzi → wyjazd na iglicę (jazda z tyłu, zawsze przechodzi)
+
+Sześć możliwych konfiguracji jest wyliczane z aktualnego zestawu krawędzi, a `GridModel` trzyma
+tylko indeks — dzięki temu konfiguracja nie może się zdezaktualizować po zmianie toru.
+
+**Sterowanie:** lewy klik bez przeciągnięcia przełącza konfigurację cyklicznie. Widok rysuje
+ustawioną trasę pełnymi szynami, a nieaktywną gałąź przyciemnionymi — gracz widzi trasę przed
+wciśnięciem „Graj", zgodnie z DESIGN sekcją 4.
+
+**Limit krawędzi na komórkę** przestał być stałą i wynika z `available_tools` poziomu: 3 gdy
+odblokowany jest `switch`, w przeciwnym razie 2.
+
+**Limit kroków symulacji** wzrósł z `kafelki + 2` na `kafelki * limit_krawędzi + 2` — przy trzech
+krawędziach pociąg może odwiedzić tę samą komórkę więcej niż raz, więc stare oszacowanie
+przestało być górnym ograniczeniem poprawnej trasy (patrz [[D13]]).
+
+## D21 — `level_05_bottleneck` to zagadka o czasie, nie o topologii
+
+**Ustalenie:** poziom dodany przez autora wszedł do kampanii jako `levels/level_05_bottleneck.json`.
+
+**Dlaczego skrzyżowanie by go nie odblokowało:** kolumny 4 i 6 są zamurowane poza `y=5`, więc oba
+pociągi muszą przejechać przez `(4,5)` i `(6,5)`. Każde z tych pól może trzymać tylko parę W–E,
+bo sąsiedzi N i S to przeszkody — oba pociągi jadą po tym samym torze. Przy dwóch krawędziach na
+komórkę ich trasy pokrywają się aż do końców ścieżki, a ścieżka ma dwa końce i tylko do końca może
+podpiąć się stacja. Cztery stacje potrzebują czterech końców. Skrzyżowanie to dwie *niezależne*
+pary krawędzi, więc nie rozdziela tras — potrzebny był rozjazd.
+
+**Na czym polega zagadka:** trasy schodzą się w jednotorowy korytarz, którym pociągi jadą w
+przeciwnych kierunkach. Gracz musi wydłużyć trasę jednego z nich objazdem, żeby drugi zdążył
+opuścić korytarz. Test `test_without_the_detour_the_trains_collide_in_the_corridor` pokazuje, że
+najkrótszy dojazd kończy się kolizją — objazd nie jest ozdobą, tylko rozwiązaniem.
