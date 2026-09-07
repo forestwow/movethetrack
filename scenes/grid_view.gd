@@ -190,9 +190,18 @@ func _draw_route(cell: Vector2i) -> void:
 	if config.is_empty():
 		return
 	var center := cell_center(cell)
-	var toe := Vector2(TrackPiece.direction(config["toe"])) * CELL / 2.0
-	var setting := Vector2(TrackPiece.direction(config["setting"])) * CELL / 2.0
-	draw_polyline(PackedVector2Array([center + toe, center, center + setting]), ROUTE, 3.0)
+	var toe := Vector2(TrackPiece.direction(config["toe"]))
+	var setting := Vector2(TrackPiece.direction(config["setting"]))
+	draw_polyline(PackedVector2Array([
+		center + toe * CELL / 2.0, center, center + setting * CELL / 2.0,
+	]), ROUTE, 3.0)
+
+	var side := Vector2(-setting.y, setting.x) * CELL * 0.08
+	draw_colored_polygon(PackedVector2Array([
+		center + setting * CELL * 0.46,
+		center + setting * CELL * 0.28 + side,
+		center + setting * CELL * 0.28 - side,
+	]), ROUTE)
 
 
 func _routed_edges(cell: Vector2i, edges: Array) -> Array:

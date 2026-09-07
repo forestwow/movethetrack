@@ -75,3 +75,24 @@ func test_without_the_detour_the_trains_collide_in_the_corridor():
 	grid.set_switch(EAST_JUNCTION, W, E)
 	var result := SimulationEngine.simulate(grid, level)
 	assert_eq(result.outcome, SimulationResult.Outcome.COLLISION)
+
+
+func test_the_author_layout_also_works():
+	_lay(MAIN_LINE)
+	_lay([[3, 5], [3, 4], [3, 3], [2, 3], [1, 3], [0, 3]])
+	_lay([[9, 3], [9, 2], [9, 1], [9, 0], [8, 0], [7, 0], [7, 1], [7, 2], [7, 3], [7, 4], [7, 5]])
+	grid.set_switch(Vector2i(3, 5), E, N)
+	grid.set_switch(EAST_JUNCTION, W, E)
+	assert_eq(grid.get_used_budget(), 21)
+	var result := SimulationEngine.simulate(grid, level)
+	assert_eq(result.outcome, SimulationResult.Outcome.SUCCESS)
+
+
+func test_the_author_layout_fails_with_the_toe_on_the_wrong_arm():
+	_lay(MAIN_LINE)
+	_lay([[3, 5], [3, 4], [3, 3], [2, 3], [1, 3], [0, 3]])
+	_lay([[9, 3], [9, 2], [9, 1], [9, 0], [8, 0], [7, 0], [7, 1], [7, 2], [7, 3], [7, 4], [7, 5]])
+	grid.set_switch(Vector2i(3, 5), N, E)
+	grid.set_switch(EAST_JUNCTION, N, E)
+	var result := SimulationEngine.simulate(grid, level)
+	assert_eq(result.outcome, SimulationResult.Outcome.WRONG_STATION)

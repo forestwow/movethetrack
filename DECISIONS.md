@@ -273,6 +273,12 @@ tylko indeks — dzięki temu konfiguracja nie może się zdezaktualizować po z
 ustawioną trasę pełnymi szynami, a nieaktywną gałąź przyciemnionymi — gracz widzi trasę przed
 wciśnięciem „Graj", zgodnie z DESIGN sekcją 4.
 
+**Poprawka wskaźnika:** pierwsza wersja rysowała samą żółtą linię między iglicą a nastawą i była
+myląca — konfiguracje „iglica N, nastawa E" oraz „iglica E, nastawa N" wyglądały identycznie, choć
+zachowują się zupełnie inaczej. Sześć konfiguracji dawało trzy obrazki, więc gracz przeklikiwał
+rozjazd i wnioskował, że żadna nie działa. Linia ma teraz **grot na ramieniu nastawy** — ogon
+wskazuje iglicę, grot kierunek jazdy ostrzem. Sześć konfiguracji, sześć różnych obrazków.
+
 **Limit krawędzi na komórkę** przestał być stałą i wynika z `available_tools` poziomu: 3 gdy
 odblokowany jest `switch`, w przeciwnym razie 2.
 
