@@ -91,3 +91,41 @@ tylko ten jeden kafelek, bo sąsiedzi mają jeszcze inne połączenia.
 
 **Skąd się wzięło:** dwa testy M2b zakładały odwrotnie i padły. Analiza pokazała, że błędne było
 oczekiwanie w teście, nie implementacja.
+
+## D9 — `grid_size` znika z pliku poziomu, rozmiar planszy to stała
+
+**Zastępuje:** pole `grid_size` z przykładów w TECH_SPEC sekcji 4.
+
+**Dlaczego:** DESIGN sekcja 6 wymienia zmienny rozmiar planszy między poziomami wprost jako
+non-goal, a sekcja 3 zapowiada, że 10×10 może wymagać korekty po playtestach. Stała
+`LevelData.GRID_WIDTH` / `GRID_HEIGHT` sprawia, że taka korekta to zmiana w jednym miejscu —
+przy polu w JSON trzeba by edytować wszystkie 20 plików.
+
+## D10 — Bonus jako płaski klucz `bonus_min_segments`
+
+**Zastępuje:** `"bonus": { "type": "min_segments", "target": N }` z TECH_SPEC sekcji 4.
+
+**Dlaczego:** w MVP istnieje dokładnie jeden typ bonusu, więc pole `type` niczego nie rozróżnia.
+Brak klucza oznacza brak bonusu (`bonus_min_segments == -1`).
+
+**Znaleziony problem:** przykład `level_18` w TECH_SPEC ma `"target": 20` przy
+`segment_budget: 14` — cel bonusowy większy od budżetu jest nieosiągalny. `LevelData` odrzuca
+teraz taki plik.
+
+## D11 — Kolor pociągu pochodzi ze stacji startowej
+
+**Ustalenie:** pliki poziomów nie podają koloru pociągu; `LevelData` bierze go z jego stacji
+źródłowej. Warunek `color_match` porównuje ten kolor z kolorem stacji docelowej.
+
+**Dlaczego:** jedno miejsce prawdy. Kolor podany osobno przy pociągu mógłby się rozjechać
+z kolorem stacji, na której ten pociąg stoi, i trzeba by to walidować.
+
+## D12 — Walidacja zwraca powód, testy przypinają się do komunikatu
+
+**Ustalenie:** `_find_problem()` zwraca pusty string albo opis pierwszego napotkanego problemu;
+`load_from_file()` loguje go przez `push_error()` i zwraca `null`. Testy używają
+`assert_push_error("fragment")` zamiast samego `assert_null`.
+
+**Dlaczego:** GUT 9.7 i tak traktuje każde niezapowiedziane `push_error()` jako niepowodzenie
+testu, więc trzeba je jawnie skonsumować. Przy okazji test sprawdza, czy odrzucenie nastąpiło
+z właściwego powodu, a nie przypadkiem z innego — przy 22 przypadkach błędnych to realna różnica.
