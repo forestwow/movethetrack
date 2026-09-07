@@ -2,6 +2,7 @@ extends CanvasLayer
 
 signal play_pressed
 signal reset_pressed
+signal level_step_requested(delta: int)
 
 const HEIGHT := 80
 
@@ -17,6 +18,9 @@ var _budget_label: Label
 var _status_label: Label
 var _play_button: Button
 var _reset_button: Button
+var _prev_button: Button
+var _next_button: Button
+var _level_label: Label
 
 
 func _ready() -> void:
@@ -29,6 +33,16 @@ func _ready() -> void:
 
 	_budget_label = _make_label(Vector2(18, 14), TEXT)
 	_status_label = _make_label(Vector2(18, 44), TEXT_DIM)
+
+	_prev_button = _make_button("<", Vector2(width - 470, 20), 44)
+	_prev_button.pressed.connect(func(): level_step_requested.emit(-1))
+
+	_level_label = _make_label(Vector2(width - 416, 30), TEXT)
+	_level_label.size = Vector2(80, 20)
+	_level_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+
+	_next_button = _make_button(">", Vector2(width - 330, 20), 44)
+	_next_button.pressed.connect(func(): level_step_requested.emit(1))
 
 	_reset_button = _make_button("Reset", Vector2(width - 218, 20))
 	_reset_button.pressed.connect(func(): reset_pressed.emit())
@@ -45,9 +59,13 @@ func show_status(text: String) -> void:
 	_status_label.text = text
 
 
+func show_level(number: int, total: int) -> void:
+	_level_label.text = "Level %d / %d" % [number, total]
+
+
 func set_buttons_enabled(enabled: bool) -> void:
-	_play_button.disabled = not enabled
-	_reset_button.disabled = not enabled
+	for button in [_play_button, _reset_button, _prev_button, _next_button]:
+		button.disabled = not enabled
 
 
 func _make_label(position: Vector2, color: Color) -> Label:
@@ -58,11 +76,11 @@ func _make_label(position: Vector2, color: Color) -> Label:
 	return label
 
 
-func _make_button(text: String, position: Vector2) -> Button:
+func _make_button(text: String, position: Vector2, width := 96.0) -> Button:
 	var button := Button.new()
 	button.text = text
 	button.position = position
-	button.size = Vector2(96, 40)
+	button.size = Vector2(width, 40)
 	button.add_theme_stylebox_override("normal", _bevel(BUTTON, PANEL_LIGHT, PANEL_DARK))
 	button.add_theme_stylebox_override("hover", _bevel(BUTTON.lightened(0.08), PANEL_LIGHT, PANEL_DARK))
 	button.add_theme_stylebox_override("pressed", _bevel(BUTTON.darkened(0.08), PANEL_DARK, PANEL_LIGHT))

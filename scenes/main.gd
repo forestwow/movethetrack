@@ -32,6 +32,7 @@ func _ready() -> void:
 	_timer.timeout.connect(_on_step)
 	hud.play_pressed.connect(_on_play_pressed)
 	hud.reset_pressed.connect(_on_reset_pressed)
+	hud.level_step_requested.connect(_on_level_step_requested)
 
 	for file_name in DirAccess.get_files_at(LEVELS_DIR):
 		if file_name.ends_with(".json"):
@@ -52,6 +53,7 @@ func _load_level() -> void:
 	view.set_grid(grid)
 	view.set_train_colors(colors)
 	view.clear_trains()
+	hud.show_level(_level_index + 1, _level_paths.size())
 	_enter_build_phase("%s — drag to build" % level.id)
 
 
@@ -60,6 +62,11 @@ func _enter_build_phase(status: String) -> void:
 	hud.set_buttons_enabled(true)
 	hud.show_status(status)
 	_refresh_budget()
+
+
+func _on_level_step_requested(delta: int) -> void:
+	_level_index = wrapi(_level_index + delta, 0, _level_paths.size())
+	_load_level()
 
 
 func _on_reset_pressed() -> void:
@@ -102,10 +109,10 @@ func _finish() -> void:
 		_enter_build_phase("Try again")
 		return
 
-	_level_index += 1
-	if _level_index >= _level_paths.size():
+	if _level_index + 1 >= _level_paths.size():
 		hud.show_status("All levels complete")
 		return
 	hud.show_status("Delivered")
 	await get_tree().create_timer(RESTART_DELAY).timeout
+	_level_index += 1
 	_load_level()
