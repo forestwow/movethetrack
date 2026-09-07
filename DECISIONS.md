@@ -47,6 +47,20 @@ Pociąg wyjeżdża ze stacji na sąsiednie pole, którego tor ma krawędź skier
 **Dlaczego:** jedna reguła mniej (stacje nie zjadają budżetu, nie trzeba osobno pilnować, żeby
 stacja miała dokładnie jedno wyjście z toru na własnym polu).
 
+**Poprawka (przy projektowaniu M4):** pierwsza wersja tej decyzji była niewykonalna. `GridModel`
+odrzucał połączenia z polem stacji, więc krawędź skierowana ku stacji — od której zależy cały
+wyjazd — nie mogła nigdy powstać. Kafelek obok stacji kończył się ślepo, a `other_edge()` dla
+wjazdu od strony stacji zwracał `-1`.
+
+Połączenie z polem stacji jest teraz dozwolone, ale **asymetryczne**: krawędź dostaje wyłącznie
+kafelek z torem, stacja nie dostaje żadnej, nie może trzymać toru i nie liczy się do budżetu.
+Połączenie stacji ze stacją jest odrzucane. `get_station_exits(cell)` zwraca sąsiadów, których tor
+faktycznie wskazuje na stację.
+
+`GridModel` nie ogranicza liczby połączeń stacji — dwa tory wchodzące do stacji docelowej są
+poprawne. Niejednoznaczny jest tylko wyjazd ze stacji startowej i to `SimulationEngine` uznaje za
+porażkę, zgodnie z zasadą „brak ukrytej logiki" z DESIGN sekcji 4.
+
 ## D4 — Jeden sygnał `track_changed(cell)` zamiast pary placed/removed
 
 **Zastępuje:** `segment_placed(cell)` / `segment_removed(cell)` z TECH_SPEC sekcji 3.

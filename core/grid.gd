@@ -44,6 +44,10 @@ func is_blocked(cell: Vector2i) -> bool:
 	return _obstacles.has(cell) or _stations.has(cell)
 
 
+func is_station(cell: Vector2i) -> bool:
+	return _stations.has(cell)
+
+
 func get_edges(cell: Vector2i) -> int:
 	return _edges.get(cell, 0)
 
@@ -62,14 +66,16 @@ func get_piece(cell: Vector2i) -> TrackPiece:
 func can_connect_cells(from: Vector2i, to: Vector2i) -> bool:
 	if not is_inside(from) or not is_inside(to):
 		return false
-	if is_blocked(from) or is_blocked(to):
+	if _obstacles.has(from) or _obstacles.has(to):
+		return false
+	if is_station(from) and is_station(to):
 		return false
 	var edge := _edge_towards(from, to)
 	if edge == -1:
 		return false
-	if get_edges(from) & edge_bit(edge) != 0:
+	if _has_edge(from, edge) or _has_edge(to, TrackPiece.opposite(edge)):
 		return false
-	if _edge_count(from) >= MAX_EDGES_PER_CELL or _edge_count(to) >= MAX_EDGES_PER_CELL:
+	if _is_full(from) or _is_full(to):
 		return false
 	return _new_cell_cost(from, to) <= get_budget_remaining()
 
@@ -83,6 +89,15 @@ func connect_cells(from: Vector2i, to: Vector2i) -> bool:
 	track_changed.emit(from)
 	track_changed.emit(to)
 	return true
+
+
+func get_station_exits(station_cell: Vector2i) -> Array[Vector2i]:
+	var exits: Array[Vector2i] = []
+	for edge in TrackPiece.Edge.values():
+		var neighbour: Vector2i = station_cell + TrackPiece.direction(edge)
+		if _has_edge(neighbour, TrackPiece.opposite(edge)):
+			exits.append(neighbour)
+	return exits
 
 
 func remove_track(cell: Vector2i) -> void:
@@ -106,7 +121,19 @@ func get_budget_remaining() -> int:
 
 
 func _new_cell_cost(from: Vector2i, to: Vector2i) -> int:
-	return int(not has_track(from)) + int(not has_track(to))
+	return _cell_cost(from) + _cell_cost(to)
+
+
+func _cell_cost(cell: Vector2i) -> int:
+	return int(not is_station(cell) and not has_track(cell))
+
+
+func _has_edge(cell: Vector2i, edge: TrackPiece.Edge) -> bool:
+	return get_edges(cell) & edge_bit(edge) != 0
+
+
+func _is_full(cell: Vector2i) -> bool:
+	return not is_station(cell) and _edge_count(cell) >= MAX_EDGES_PER_CELL
 
 
 func _edge_towards(from: Vector2i, to: Vector2i) -> int:
@@ -126,6 +153,8 @@ func _edge_count(cell: Vector2i) -> int:
 
 
 func _add_edge(cell: Vector2i, edge: TrackPiece.Edge) -> void:
+	if is_station(cell):
+		return
 	_edges[cell] = get_edges(cell) | edge_bit(edge)
 
 

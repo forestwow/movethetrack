@@ -41,9 +41,54 @@ func test_connect_rejects_obstacle_cell():
 	assert_false(grid.can_connect_cells(Vector2i(5, 5), Vector2i(5, 6)))
 
 
-func test_connect_rejects_station_cell():
+func test_connecting_to_a_station_only_marks_the_track_cell():
 	grid.add_station(Station.new("A", Vector2i(2, 2), "red", Station.Role.SOURCE))
+	assert_true(grid.connect_cells(Vector2i(2, 1), Vector2i(2, 2)))
+	assert_eq(grid.get_edges(Vector2i(2, 1)), grid.edge_bit(S))
+	assert_false(grid.has_track(Vector2i(2, 2)))
+
+
+func test_a_station_still_cannot_hold_track():
+	grid.add_station(Station.new("A", Vector2i(2, 2), "red", Station.Role.SOURCE))
+	grid.connect_cells(Vector2i(2, 1), Vector2i(2, 2))
+	grid.connect_cells(Vector2i(2, 2), Vector2i(2, 3))
+	assert_false(grid.has_track(Vector2i(2, 2)))
+	assert_eq(grid.get_edges(Vector2i(2, 3)), grid.edge_bit(N))
+
+
+func test_connect_rejects_two_stations():
+	grid.add_station(Station.new("A", Vector2i(2, 2), "red", Station.Role.SOURCE))
+	grid.add_station(Station.new("B", Vector2i(2, 3), "red", Station.Role.DESTINATION))
+	assert_false(grid.can_connect_cells(Vector2i(2, 2), Vector2i(2, 3)))
+
+
+func test_connect_rejects_a_repeated_station_connection():
+	grid.add_station(Station.new("A", Vector2i(2, 2), "red", Station.Role.SOURCE))
+	grid.connect_cells(Vector2i(2, 1), Vector2i(2, 2))
 	assert_false(grid.can_connect_cells(Vector2i(2, 1), Vector2i(2, 2)))
+	assert_false(grid.can_connect_cells(Vector2i(2, 2), Vector2i(2, 1)))
+
+
+func test_station_exits_list_neighbouring_track_facing_the_station():
+	grid.add_station(Station.new("A", Vector2i(2, 2), "red", Station.Role.SOURCE))
+	assert_eq(grid.get_station_exits(Vector2i(2, 2)), [])
+	grid.connect_cells(Vector2i(2, 1), Vector2i(2, 2))
+	grid.connect_cells(Vector2i(3, 2), Vector2i(2, 2))
+	assert_eq(grid.get_station_exits(Vector2i(2, 2)), [Vector2i(2, 1), Vector2i(3, 2)])
+
+
+func test_station_exits_ignore_neighbouring_track_that_does_not_face_it():
+	grid.add_station(Station.new("A", Vector2i(2, 2), "red", Station.Role.SOURCE))
+	grid.connect_cells(Vector2i(2, 1), Vector2i(1, 1))
+	assert_eq(grid.get_station_exits(Vector2i(2, 2)), [])
+
+
+func test_removing_track_next_to_a_station_clears_the_station_exit():
+	grid.add_station(Station.new("A", Vector2i(2, 2), "red", Station.Role.SOURCE))
+	grid.connect_cells(Vector2i(2, 1), Vector2i(2, 2))
+	grid.connect_cells(Vector2i(2, 1), Vector2i(2, 0))
+	grid.remove_track(Vector2i(2, 1))
+	assert_eq(grid.get_station_exits(Vector2i(2, 2)), [])
 
 
 func test_connect_rejects_an_existing_connection():

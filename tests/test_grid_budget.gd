@@ -110,3 +110,10 @@ func test_track_changed_does_not_fire_on_removing_empty_cell():
 	watch_signals(grid)
 	grid.remove_track(Vector2i(7, 7))
 	assert_signal_not_emitted(grid, "track_changed")
+
+
+func test_connecting_to_a_station_costs_only_the_track_cell():
+	grid.add_station(Station.new("A", Vector2i(2, 2), "red", Station.Role.SOURCE))
+	grid.connect_cells(Vector2i(2, 1), Vector2i(2, 2))
+	assert_eq(grid.get_used_budget(), 1)
+	assert_eq(grid.get_budget_remaining(), 2)
