@@ -2,21 +2,35 @@ class_name GridView
 extends Node2D
 
 const CELL := 80
+const NO_CELL := Vector2i(-1, -1)
 
-const BACKGROUND := Color("#161a23")
-const GRID_LINE := Color("#252b38")
-const OBSTACLE := Color("#39404f")
-const TRACK := Color("#c9d2e3")
-const STATION_RING := Color("#0f121a")
+const GRASS := Color("#5e8f42")
+const GRASS_TUFT := Color("#537f3a")
+const GRASS_LINE := Color("#568139")
+const BALLAST := Color("#8f8676")
+const SLEEPER := Color("#5e4129")
+const RAIL := Color("#e6e6da")
+
+const TUFTS := [
+	[Vector2(14, 22), Vector2(52, 46), Vector2(33, 63)],
+	[Vector2(60, 18), Vector2(22, 52), Vector2(44, 68)],
+	[Vector2(26, 14), Vector2(64, 40), Vector2(16, 66)],
+	[Vector2(40, 26), Vector2(12, 44), Vector2(58, 60)],
+]
+const TREE_TRUNK := Color("#4a3524")
+const TREE_LEAF := Color("#2d6b2a")
+const TREE_SHADE := Color("#20501e")
+const PLATFORM := Color("#c6c1b1")
+const PLATFORM_EDGE := Color("#8a8678")
+const OUTLINE := Color("#2a2118")
+const WINDOW := Color("#dfe7ef")
 
 const COLORS := {
-	"red": Color("#e0574f"),
-	"blue": Color("#4d94e0"),
-	"green": Color("#4fb87a"),
-	"yellow": Color("#e0b64d"),
+	"red": Color("#d13b32"),
+	"blue": Color("#2f6fc4"),
+	"green": Color("#3f9d52"),
+	"yellow": Color("#e0a92c"),
 }
-
-const NO_CELL := Vector2i(-1, -1)
 
 var grid: GridModel
 var editable := true
@@ -24,6 +38,7 @@ var editable := true
 var _drag_cell := NO_CELL
 var _train_colors := {}
 var _train_cells := {}
+var _train_headings := {}
 
 
 func set_grid(new_grid: GridModel) -> void:
@@ -39,11 +54,15 @@ func set_train_colors(colors: Dictionary) -> void:
 
 
 func show_trains(cells: Dictionary) -> void:
+	for train_id in cells:
+		if _train_cells.has(train_id) and cells[train_id] != _train_cells[train_id]:
+			_train_headings[train_id] = cells[train_id] - _train_cells[train_id]
 	_train_cells = cells
 	queue_redraw()
 
 
 func clear_trains() -> void:
+	_train_headings.clear()
 	show_trains({})
 
 
@@ -85,43 +104,108 @@ func _unhandled_input(event: InputEvent) -> void:
 func _draw() -> void:
 	if grid == null:
 		return
-	draw_rect(Rect2(Vector2.ZERO, board_size()), BACKGROUND)
-	_draw_grid_lines()
+	_draw_ground()
 	for cell in grid.get_obstacles():
-		draw_rect(Rect2(Vector2(cell) * CELL + Vector2(4, 4), Vector2(CELL - 8, CELL - 8)), OBSTACLE)
+		_draw_tree(cell)
 	for cell in grid.get_track_cells():
-		_draw_track(cell)
+		_draw_ballast(cell)
+	for cell in grid.get_track_cells():
+		_draw_rails(cell)
 	for station in grid.get_stations():
 		_draw_station(station)
 	for train_id in _train_cells:
 		_draw_train(train_id, _train_cells[train_id])
 
 
-func _draw_grid_lines() -> void:
+func _draw_ground() -> void:
 	var size := board_size()
+	draw_rect(Rect2(Vector2.ZERO, size), GRASS)
+	for y in grid.height:
+		for x in grid.width:
+			var origin := Vector2(x, y) * CELL
+			for offset in TUFTS[(x * 7 + y * 13) % TUFTS.size()]:
+				draw_rect(Rect2(origin + offset, Vector2(4, 3)), GRASS_TUFT)
 	for x in grid.width + 1:
-		draw_line(Vector2(x * CELL, 0), Vector2(x * CELL, size.y), GRID_LINE)
+		draw_line(Vector2(x * CELL, 0), Vector2(x * CELL, size.y), GRASS_LINE)
 	for y in grid.height + 1:
-		draw_line(Vector2(0, y * CELL), Vector2(size.x, y * CELL), GRID_LINE)
+		draw_line(Vector2(0, y * CELL), Vector2(size.x, y * CELL), GRASS_LINE)
 
 
-func _draw_track(cell: Vector2i) -> void:
+func _edges_of(cell: Vector2i) -> Array:
+	return TrackPiece.Edge.values().filter(
+		func(edge): return grid.get_edges(cell) & GridModel.edge_bit(edge) != 0)
+
+
+func _draw_ballast(cell: Vector2i) -> void:
 	var center := cell_center(cell)
-	for edge in TrackPiece.Edge.values():
-		if grid.get_edges(cell) & GridModel.edge_bit(edge) != 0:
-			draw_line(center, center + Vector2(TrackPiece.direction(edge)) * CELL / 2.0, TRACK, 6.0)
+	var width := CELL * 0.46
+	for edge in _edges_of(cell):
+		var dir := Vector2(TrackPiece.direction(edge))
+		var span := dir * CELL / 2.0
+		var perp := Vector2(-dir.y, dir.x) * width / 2.0
+		draw_colored_polygon([
+			center - perp, center + perp, center + span + perp, center + span - perp,
+		], BALLAST)
+	draw_rect(Rect2(center - Vector2(width, width) / 2.0, Vector2(width, width)), BALLAST)
+
+
+func _draw_rails(cell: Vector2i) -> void:
+	var center := cell_center(cell)
+	var offset := CELL * 0.1
+	var edges := _edges_of(cell)
+	for edge in edges:
+		var dir := Vector2(TrackPiece.direction(edge))
+		var perp := Vector2(-dir.y, dir.x)
+		for distance in [0.26, 0.62, 0.96]:
+			var at: Vector2 = center + dir * CELL / 2.0 * distance
+			draw_line(at - perp * CELL * 0.145, at + perp * CELL * 0.145, SLEEPER, 5.0)
+	for edge in edges:
+		var dir := Vector2(TrackPiece.direction(edge))
+		var perp := Vector2(-dir.y, dir.x)
+		for side in [-1.0, 1.0]:
+			var from: Vector2 = center + perp * offset * side
+			draw_line(from, from + dir * CELL / 2.0, RAIL, 3.0)
+
+
+func _draw_tree(cell: Vector2i) -> void:
+	var center := cell_center(cell)
+	draw_rect(Rect2(center + Vector2(-3, 6), Vector2(6, 18)), TREE_TRUNK)
+	draw_circle(center + Vector2(0, -4), CELL * 0.25, TREE_SHADE)
+	draw_circle(center + Vector2(-3, -9), CELL * 0.21, TREE_LEAF)
+
+
+func _draw_station(station: Station) -> void:
+	var color: Color = COLORS.get(station.color, Color.WHITE)
+	var origin := Vector2(station.cell) * CELL
+	var platform := Rect2(origin + Vector2(5, 5), Vector2(CELL - 10, CELL - 10))
+	draw_rect(platform, PLATFORM)
+	draw_rect(platform, PLATFORM_EDGE, false, 2.0)
+
+	var building := Rect2(origin + Vector2(16, 18), Vector2(CELL - 32, CELL - 34))
+	draw_rect(building, color.darkened(0.25))
+	draw_rect(Rect2(building.position + Vector2(0, 12), building.size - Vector2(0, 12)), color)
+	if station.is_destination():
+		draw_rect(building.grow(-9), PLATFORM)
+	draw_rect(building, OUTLINE, false, 2.0)
 
 
 func _draw_train(train_id: String, cell: Vector2i) -> void:
 	var color: Color = COLORS.get(_train_colors.get(train_id, ""), Color.WHITE)
-	var corner := Vector2(cell) * CELL + Vector2(16, 16)
-	draw_rect(Rect2(corner, Vector2(CELL - 32, CELL - 32)), STATION_RING)
-	draw_rect(Rect2(corner + Vector2(3, 3), Vector2(CELL - 38, CELL - 38)), color)
+	var heading: Vector2i = _train_headings.get(train_id, Vector2i(1, 0))
+	var dir := Vector2(heading)
+	var perp := Vector2(-dir.y, dir.x)
+	var center := cell_center(cell)
+	var length := CELL * 0.31
+	var width := CELL * 0.19
 
+	var body := PackedVector2Array([
+		center - dir * length - perp * width,
+		center + dir * length - perp * width,
+		center + dir * length + perp * width,
+		center - dir * length + perp * width,
+	])
+	draw_colored_polygon(body, color)
+	draw_polyline(body + PackedVector2Array([body[0]]), OUTLINE, 2.0)
 
-func _draw_station(station: Station) -> void:
-	var center := cell_center(station.cell)
-	var color: Color = COLORS.get(station.color, Color.WHITE)
-	draw_circle(center, CELL * 0.34, color)
-	if station.is_destination():
-		draw_circle(center, CELL * 0.18, STATION_RING)
+	var cab := center + dir * length * 0.45
+	draw_line(cab - perp * width * 0.7, cab + perp * width * 0.7, WINDOW, 5.0)

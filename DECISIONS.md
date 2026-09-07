@@ -225,3 +225,27 @@ kampanii. Brak osobnego rejestru poziomów i singletona `GameFlow`.
 **Dlaczego:** przy nazwach `level_01`..`level_20` sortowanie daje dokładnie tę kolejność, a
 rejestr byłby drugim miejscem, które trzeba zaktualizować przy dodaniu poziomu. Nie ma zapisu
 postępu między sesjami (non-goal z DESIGN sekcji 6), więc singleton nie ma czego trzymać.
+
+## D19 — Styl OpenTTD w widoku z góry, rysowany proceduralnie
+
+**Zmienia:** DESIGN sekcja 5, gdzie MVP miał zostać przy „prostych kształtach geometrycznych",
+a pixel art był odłożony warunkowo na później.
+
+**Ustalenie:** plansza dostaje wygląd inspirowany OpenTTD — trawa z drobnymi kępkami, tor jako
+podsypka z podkładami i dwiema szynami, przeszkody jako drzewa, stacje jako peron z budynkiem
+w kolorze linii, pociągi jako lokomotywy zorientowane w kierunku jazdy. HUD to szary panel
+z fazowaną ramką w stylu interfejsów z lat 90.
+
+**Czego świadomie NIE robimy:** rzutu izometrycznego. OpenTTD jest izometryczny, ale zmiana rzutu
+wymagałaby przeliczania siatki na ekran i z powrotem, przepisania trafiania myszą w kafelek,
+sortowania rysowania wg głębokości i toru w ośmiu kierunkach ekranowych — dużo pracy, która nie
+dotyka mechaniki. Plansza zostaje kwadratowa, `GridModel`, sterowanie i symulacja są nietknięte.
+
+**Dlaczego proceduralnie, a nie sprite'ami:** wszystko rysuje `_draw()` z kolorów i proporcji
+wyliczanych od `CELL`, więc każda poprawka to jedna linijka i zmiana rozmiaru kafelka nadal działa
+bez regenerowania grafik. Prawdziwe sprite'y pixel art zostają jako opcja, jeśli styl się obroni.
+
+**Fazowanie przycisków** powstaje z wygenerowanego w kodzie obrazka 6×6 użytego jako
+`StyleBoxTexture` 9-patch — jasne krawędzie u góry i po lewej, ciemne u dołu i po prawej,
+odwrócone w stanie wciśniętym. `StyleBoxFlat` ma tylko jeden kolor ramki, więc nie da się nim
+zrobić prawdziwego fazowania.
