@@ -11,6 +11,7 @@ const BALLAST := Color("#8f8676")
 const SLEEPER := Color("#5e4129")
 const RAIL := Color("#e6e6da")
 const RAIL_IDLE := Color("#6b6559")
+const ROUTE := Color("#f4d97a")
 
 const TUFTS := [
 	[Vector2(14, 22), Vector2(52, 46), Vector2(33, 63)],
@@ -89,10 +90,12 @@ func _unhandled_input(event: InputEvent) -> void:
 	if grid == null or not editable:
 		return
 
-	if event is InputEventMouseButton:
-		var cell := cell_at(get_local_mouse_position())
-		if event.button_index == MOUSE_BUTTON_LEFT:
-			if event.pressed:
+	var local := make_input_local(event)
+
+	if local is InputEventMouseButton:
+		var cell := cell_at(local.position)
+		if local.button_index == MOUSE_BUTTON_LEFT:
+			if local.pressed:
 				_drag_cell = cell
 				_press_cell = cell
 				_dragged = false
@@ -100,11 +103,11 @@ func _unhandled_input(event: InputEvent) -> void:
 				if not _dragged and cell == _press_cell:
 					grid.cycle_switch(cell)
 				_drag_cell = NO_CELL
-		elif event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
+		elif local.button_index == MOUSE_BUTTON_RIGHT and local.pressed:
 			grid.remove_track(cell)
 
-	elif event is InputEventMouseMotion and _drag_cell != NO_CELL:
-		var cell := cell_at(get_local_mouse_position())
+	elif local is InputEventMouseMotion and _drag_cell != NO_CELL:
+		var cell := cell_at(local.position)
 		if cell != _drag_cell:
 			_dragged = true
 			if grid.is_inside(cell):
@@ -122,6 +125,8 @@ func _draw() -> void:
 		_draw_ballast(cell)
 	for cell in grid.get_track_cells():
 		_draw_rails(cell)
+	for cell in grid.get_track_cells():
+		_draw_route(cell)
 	for station in grid.get_stations():
 		_draw_station(station)
 	for train_id in _train_cells:
@@ -178,6 +183,16 @@ func _draw_rails(cell: Vector2i) -> void:
 		for side in [-1.0, 1.0]:
 			var from: Vector2 = center + perp * offset * side
 			draw_line(from, from + dir * CELL / 2.0, color, 3.0)
+
+
+func _draw_route(cell: Vector2i) -> void:
+	var config := grid.get_switch(cell)
+	if config.is_empty():
+		return
+	var center := cell_center(cell)
+	var toe := Vector2(TrackPiece.direction(config["toe"])) * CELL / 2.0
+	var setting := Vector2(TrackPiece.direction(config["setting"])) * CELL / 2.0
+	draw_polyline(PackedVector2Array([center + toe, center, center + setting]), ROUTE, 3.0)
 
 
 func _routed_edges(cell: Vector2i, edges: Array) -> Array:

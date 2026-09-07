@@ -54,7 +54,13 @@ func _load_level() -> void:
 	view.set_train_colors(colors)
 	view.clear_trains()
 	hud.show_level(_level_index + 1, _level_paths.size())
-	_enter_build_phase("%s — drag to build" % level.id)
+	_enter_build_phase(_build_hint())
+
+
+func _build_hint() -> String:
+	if level.available_tools.has("switch"):
+		return "Drag to build, click a junction to set it"
+	return "Drag to build track"
 
 
 func _enter_build_phase(status: String) -> void:
