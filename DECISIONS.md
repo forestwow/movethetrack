@@ -156,10 +156,12 @@ wymagałaby komórki z trzema krawędziami — a takiej `GridModel` nie pozwala 
 próbował zbudować pętlę, kończył się na `can_connect_cells()` zwracającym `false`; został
 przepisany na sprawdzenie właśnie tego.
 
-**Dlaczego mimo to zostaje:** skrzyżowanie (M13) podnosi limit do 4 krawędzi i wtedy pętla staje
-się budowalna. Do tego czasu limit kroków chroni przed zawieszeniem gry, gdyby błąd w symulacji
-wprowadził pociąg w nieskończony cykl — pętla w `while` bez wyjścia zawiesiłaby cały proces Godota,
-nie tylko poziom.
+**Dlaczego mimo to zostaje:** przewidywanie się sprawdziło, choć wcześniej niż zakładałem.
+**Pętla stała się osiągalna już przy rozjeździe**, nie dopiero przy skrzyżowaniu: pociąg wjeżdża
+gałęzią, wyjeżdża iglicą w pętlę, wraca do rozjazdu drugą gałęzią i znowu wychodzi iglicą — kręci
+się w kółko. Test `test_a_switch_can_trap_a_train_in_a_loop` buduje taki układ i sprawdza, że
+symulacja zwraca `LOOP` zamiast się zawiesić. Bez limitu kroków `while` bez wyjścia zawiesiłby cały
+proces Godota, nie tylko poziom.
 
 ## D14 — Podgląd trasy to zwykłe `simulate()`, bez osobnego API
 
@@ -341,3 +343,32 @@ pojedzie pociąg; kiedy dwa składy znajdą się na tym samym polu, to już zaga
 topologiczne — zła nastawa, ślepy tor, zła stacja, za mały budżet — nadal widać od razu; kolizja
 wraca jako to, co odkrywasz, wciskając „Graj", zgodnie z „jednym, w pełni zsynchronizowanym
 przejazdem" z DESIGN sekcji 1.
+
+## D23 — Skrzyżowanie: cztery krawędzie, zawsze prosto, bez konfiguracji
+
+**Realizuje:** M13 z TECH_SPEC sekcji 5.
+
+**Ustalenie:** komórka z czterema krawędziami to skrzyżowanie. Pociąg wjeżdżający dowolną
+krawędzią wyjeżdża krawędzią przeciwległą — dwa niezależne tory (N–S i E–W) przecinające się bez
+interakcji. Brak stanu, brak nastawy, brak klikania: przy czterech krawędziach jedyny sensowny
+podział na dwie pary „na wprost" to właśnie N–S i E–W, więc nie ma czego wybierać.
+
+**Limit krawędzi:** `crossing` w `available_tools` podnosi limit do 4, `switch` do 3, brak obu
+zostawia 2. **Poziom ze skrzyżowaniem pozwala też na rozjazdy** — do czterech krawędzi trzeba
+dojść przez trzy, więc rozdzielanie tych limitów wymagałoby dopuszczenia stanu pośredniego, który
+jest nieprzejezdny. Przy PoC to komplikacja bez zysku.
+
+## D24 — Dwa pociągi nie mieszczą się na skrzyżowaniu jednocześnie
+
+**Ustalenie:** reguła kolizji nie ma wyjątku dla skrzyżowań. Dwa pociągi na tej samej komórce w tym
+samym kroku to zderzenie, nawet jeśli jadą po dwóch niezależnych torach.
+
+**Dlaczego:** fizycznie to jeden kafelek i przy jednoczesnym przejeździe sprite'y nakładałyby się
+na siebie — reguła zgadza się więc z tym, co gracz widzi. Ważniejsze, że dzięki temu skrzyżowanie
+jest **współdzielonym zasobem, a nie tylko sztuczką topologiczną**: `level_06_crossing` ma dwie
+trasy przecinające się na `(4,4)`, najkrótszy układ stawia oba pociągi na tym polu w kroku 4, a
+rozwiązaniem jest objazd opóźniający czerwony o dwa kroki. Bez tej reguły poziom byłby trywialny.
+
+**Uwaga projektowa:** to pierwszy poziom, którego **nie dało się zbudować** przed M13. Dwie trasy
+łączące przeciwległe boki planszy muszą się przeciąć, a przy dwóch krawędziach na komórkę
+przecięcie jest niemożliwe (patrz [[D21]]).

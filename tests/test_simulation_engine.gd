@@ -130,3 +130,19 @@ func test_route_reaches_the_wrong_station_when_the_track_leads_there():
 	assert_eq(SimulationEngine.route(wrong_grid, wrong, wrong.trains[0]), [
 		Vector2i(0, 0), Vector2i(1, 0), Vector2i(2, 0),
 	])
+
+
+func test_a_switch_can_trap_a_train_in_a_loop():
+	var looping := LevelData.load_from_file("res://tests/fixtures/level_loop.json")
+	var loop_grid := looping.create_grid()
+	var junction := Vector2i(2, 2)
+	loop_grid.connect_cells(junction, Vector2i(2, 1))
+	loop_grid.connect_cells(junction, Vector2i(1, 2))
+	loop_grid.connect_cells(junction, Vector2i(3, 2))
+	for pair in [[[1, 2], [1, 3]], [[1, 3], [2, 3]], [[2, 3], [3, 3]], [[3, 3], [3, 2]]]:
+		loop_grid.connect_cells(Vector2i(pair[0][0], pair[0][1]), Vector2i(pair[1][0], pair[1][1]))
+	loop_grid.set_switch(junction, TrackPiece.Edge.WEST, TrackPiece.Edge.NORTH)
+
+	var result := SimulationEngine.simulate(loop_grid, looping)
+	assert_eq(result.outcome, SimulationResult.Outcome.LOOP)
+	assert_eq(result.failed_train_id, "train_1")

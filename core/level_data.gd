@@ -147,7 +147,9 @@ func get_station(station_id: String) -> Station:
 
 func create_grid() -> GridModel:
 	var grid := GridModel.new(GRID_WIDTH, GRID_HEIGHT, segment_budget)
-	if available_tools.has("switch"):
+	if available_tools.has("crossing"):
+		grid.max_edges_per_cell = 4
+	elif available_tools.has("switch"):
 		grid.max_edges_per_cell = 3
 	for cell in obstacles:
 		grid.add_obstacle(cell)

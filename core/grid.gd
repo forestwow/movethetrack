@@ -120,6 +120,8 @@ func exit_edge(cell: Vector2i, entry: TrackPiece.Edge) -> int:
 	if edges.size() == 3:
 		var config := get_switch(cell)
 		return config["setting"] if entry == config["toe"] else config["toe"]
+	if edges.size() == 4:
+		return TrackPiece.opposite(entry)
 	return -1
 
 

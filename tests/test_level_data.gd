@@ -73,6 +73,8 @@ func test_create_grid_returns_a_fresh_grid_each_time():
 	assert_false(level.create_grid().has_track(Vector2i(3, 4)))
 
 
-func test_create_grid_raises_the_edge_limit_when_the_switch_is_available():
-	assert_eq(LevelData.load_from_file(FULL).create_grid().max_edges_per_cell, 3)
+func test_create_grid_raises_the_edge_limit_for_the_tools_the_level_unlocks():
+	assert_eq(LevelData.load_from_file(FULL).create_grid().max_edges_per_cell, 4)
 	assert_eq(LevelData.load_from_file(LEVEL_01).create_grid().max_edges_per_cell, 2)
+	assert_eq(LevelData.load_from_file(
+		"res://levels/level_05_bottleneck.json").create_grid().max_edges_per_cell, 3)
