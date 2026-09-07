@@ -1,0 +1,14 @@
+{
+  "id": "level_01",
+  "segment_budget": 6,
+  "obstacles": [],
+  "stations": [
+    { "id": "A", "x": 2, "y": 4, "color": "red", "role": "source" },
+    { "id": "B", "x": 7, "y": 4, "color": "red", "role": "destination" }
+  ],
+  "trains": [
+    { "id": "train_1", "start_station": "A", "target_station": "B" }
+  ],
+  "available_tools": [],
+  "win_conditions": ["basic_delivery"]
+}
