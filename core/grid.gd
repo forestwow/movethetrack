@@ -36,6 +36,24 @@ func get_station(cell: Vector2i) -> Station:
 	return _stations.get(cell)
 
 
+func get_stations() -> Array[Station]:
+	var all: Array[Station] = []
+	all.assign(_stations.values())
+	return all
+
+
+func get_obstacles() -> Array[Vector2i]:
+	var all: Array[Vector2i] = []
+	all.assign(_obstacles.keys())
+	return all
+
+
+func get_track_cells() -> Array[Vector2i]:
+	var all: Array[Vector2i] = []
+	all.assign(_edges.keys())
+	return all
+
+
 func is_inside(cell: Vector2i) -> bool:
 	return cell.x >= 0 and cell.y >= 0 and cell.x < width and cell.y < height
 

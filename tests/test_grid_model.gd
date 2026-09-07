@@ -144,3 +144,12 @@ func test_remove_track_leaves_unrelated_track_alone():
 func test_remove_track_on_empty_cell_does_nothing():
 	grid.remove_track(Vector2i(7, 7))
 	assert_false(grid.has_track(Vector2i(7, 7)))
+
+
+func test_lists_its_stations_obstacles_and_track_cells():
+	grid.add_station(Station.new("A", Vector2i(1, 1), "red", Station.Role.SOURCE))
+	grid.add_obstacle(Vector2i(5, 5))
+	grid.connect_cells(Vector2i(8, 8), Vector2i(8, 9))
+	assert_eq(grid.get_stations().size(), 1)
+	assert_eq(grid.get_obstacles(), [Vector2i(5, 5)])
+	assert_eq(grid.get_track_cells(), [Vector2i(8, 8), Vector2i(8, 9)])
