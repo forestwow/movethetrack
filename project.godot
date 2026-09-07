@@ -21,4 +21,4 @@ enabled=PackedStringArray("res://addons/gut/plugin.cfg")
 [display]
 
 window/size/viewport_width=640
-window/size/viewport_height=640
+window/size/viewport_height=720

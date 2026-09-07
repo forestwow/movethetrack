@@ -1,0 +1,20 @@
+{
+  "id": "level_04",
+  "segment_budget": 22,
+  "obstacles": [
+    { "x": 4, "y": 4 },
+    { "x": 6, "y": 5 }
+  ],
+  "stations": [
+    { "id": "A", "x": 0, "y": 4, "color": "red", "role": "source" },
+    { "id": "B", "x": 0, "y": 5, "color": "blue", "role": "source" },
+    { "id": "C", "x": 9, "y": 4, "color": "red", "role": "destination" },
+    { "id": "D", "x": 9, "y": 5, "color": "blue", "role": "destination" }
+  ],
+  "trains": [
+    { "id": "train_1", "start_station": "A", "target_station": "C" },
+    { "id": "train_2", "start_station": "B", "target_station": "D" }
+  ],
+  "available_tools": [],
+  "win_conditions": ["basic_delivery"]
+}

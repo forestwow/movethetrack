@@ -186,3 +186,42 @@ zgłaszana przed kolizją. Kolizja to zdarzenie między dwoma poprawnie jadącym
 
 **Krok kolizyjny trafia do logu**, więc animacja pokaże moment zderzenia, a nie zatrzyma pociągi
 krok wcześniej.
+
+## D16 — M6 (`WinConditionEvaluator`) przesunięte za warstwę prezentacji
+
+**Zmienia:** kolejność kamieni milowych z TECH_SPEC sekcji 5.
+
+**Dlaczego:** `basic_delivery` jest w praktyce równoważne `SimulationResult.is_success()` — pociąg
+albo dociera do celu, albo symulacja kończy się jednym z trybów porażki. Interfejs bazowy
+warunków zwycięstwa nie miałby dziś drugiej implementacji, na której można sprawdzić, czy
+abstrakcja jest właściwa. Wraca przy `color_match` (M12), kiedy będą dwa warunki i będzie co
+uogólniać.
+
+**Priorytet:** grywalny PoC przed dopracowaniem struktury — decyzja autora.
+
+## D17 — Poziomy mają testy rozwiązywalności zamiast solvera
+
+**Zamyka:** ryzyko z TECH_SPEC sekcji 6 o braku automatycznego sprawdzania, czy poziom da się
+ukończyć w podanym budżecie.
+
+**Ustalenie:** `tests/test_levels_are_solvable.gd` trzyma zamierzone rozwiązanie każdego poziomu
+jako listę kafelków. Test buduje je przez publiczne API `GridModel`, sprawdza, że mieści się
+w budżecie, uruchamia symulację i porównuje przejechaną trasę z zamierzoną.
+
+**Dlaczego to wystarczy zamiast solvera:** solver odpowiadałby na pytanie „czy istnieje jakieś
+rozwiązanie". Test odpowiada na mocniejsze: „czy rozwiązanie, które miałem na myśli, faktycznie
+działa i mieści się w budżecie". Wyłapuje literówkę we współrzędnych, za ciasny budżet i
+przeszkodę postawioną w poprzek zamierzonej trasy — czyli wszystko, co realnie psuje ręcznie
+pisany poziom. Nie wyłapie poziomu, który da się przejść łatwiej niż zakładałem; to zostaje dla
+playtestów.
+
+## D18 — Kolejność poziomów wynika z nazw plików
+
+**Ustalenie:** `Main` czyta `res://levels/*.json`, sortuje alfabetycznie i tak ustala kolejność
+kampanii. Brak osobnego rejestru poziomów i singletona `GameFlow`.
+
+**Zastępuje:** `GameFlow` z TECH_SPEC sekcji 3.
+
+**Dlaczego:** przy nazwach `level_01`..`level_20` sortowanie daje dokładnie tę kolejność, a
+rejestr byłby drugim miejscem, które trzeba zaktualizować przy dodaniu poziomu. Nie ma zapisu
+postępu między sesjami (non-goal z DESIGN sekcji 6), więc singleton nie ma czego trzymać.

@@ -16,7 +16,14 @@ const COLORS := {
 	"yellow": Color("#e0b64d"),
 }
 
+const NO_CELL := Vector2i(-1, -1)
+
 var grid: GridModel
+var editable := true
+
+var _drag_cell := NO_CELL
+var _train_colors := {}
+var _train_cells := {}
 
 
 func set_grid(new_grid: GridModel) -> void:
@@ -25,6 +32,19 @@ func set_grid(new_grid: GridModel) -> void:
 	grid = new_grid
 	grid.track_changed.connect(_on_track_changed)
 	queue_redraw()
+
+
+func set_train_colors(colors: Dictionary) -> void:
+	_train_colors = colors
+
+
+func show_trains(cells: Dictionary) -> void:
+	_train_cells = cells
+	queue_redraw()
+
+
+func clear_trains() -> void:
+	show_trains({})
 
 
 func cell_at(position: Vector2) -> Vector2i:
@@ -43,6 +63,25 @@ func _on_track_changed(_cell: Vector2i) -> void:
 	queue_redraw()
 
 
+func _unhandled_input(event: InputEvent) -> void:
+	if grid == null or not editable:
+		return
+
+	if event is InputEventMouseButton:
+		var cell := cell_at(get_local_mouse_position())
+		if event.button_index == MOUSE_BUTTON_LEFT:
+			_drag_cell = cell if event.pressed else NO_CELL
+		elif event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
+			grid.remove_track(cell)
+
+	elif event is InputEventMouseMotion and _drag_cell != NO_CELL:
+		var cell := cell_at(get_local_mouse_position())
+		if cell != _drag_cell:
+			if grid.is_inside(cell):
+				grid.connect_cells(_drag_cell, cell)
+			_drag_cell = cell
+
+
 func _draw() -> void:
 	if grid == null:
 		return
@@ -54,6 +93,8 @@ func _draw() -> void:
 		_draw_track(cell)
 	for station in grid.get_stations():
 		_draw_station(station)
+	for train_id in _train_cells:
+		_draw_train(train_id, _train_cells[train_id])
 
 
 func _draw_grid_lines() -> void:
@@ -69,6 +110,13 @@ func _draw_track(cell: Vector2i) -> void:
 	for edge in TrackPiece.Edge.values():
 		if grid.get_edges(cell) & GridModel.edge_bit(edge) != 0:
 			draw_line(center, center + Vector2(TrackPiece.direction(edge)) * CELL / 2.0, TRACK, 6.0)
+
+
+func _draw_train(train_id: String, cell: Vector2i) -> void:
+	var color: Color = COLORS.get(_train_colors.get(train_id, ""), Color.WHITE)
+	var corner := Vector2(cell) * CELL + Vector2(16, 16)
+	draw_rect(Rect2(corner, Vector2(CELL - 32, CELL - 32)), STATION_RING)
+	draw_rect(Rect2(corner + Vector2(3, 3), Vector2(CELL - 38, CELL - 38)), color)
 
 
 func _draw_station(station: Station) -> void:
