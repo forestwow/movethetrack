@@ -1,7 +1,7 @@
 class_name SimulationResult
 extends RefCounted
 
-enum Outcome { SUCCESS, NO_DEPARTURE, AMBIGUOUS_DEPARTURE, DEAD_END, WRONG_STATION, LOOP }
+enum Outcome { SUCCESS, NO_DEPARTURE, AMBIGUOUS_DEPARTURE, DEAD_END, WRONG_STATION, COLLISION, LOOP }
 
 var outcome: Outcome = Outcome.SUCCESS
 var failed_train_id := ""

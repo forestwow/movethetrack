@@ -169,3 +169,20 @@ nie tylko poziom.
 pełny log pozycji (`SimulationResult.steps`). Podgląd trasy przed wciśnięciem „Graj" to po prostu
 wywołanie `simulate()` i narysowanie `get_path(train_id)` — ta sama funkcja, którą potem odtwarza
 animacja. Osobne API byłoby drugą implementacją tej samej logiki, czyli drugim miejscem na błąd.
+
+## D15 — Kolizja to wspólne pole albo zamiana miejsc
+
+**Ustalenie:** po każdym kroku symulacji `SimulationEngine` sprawdza dwie rzeczy:
+dwa pociągi na tym samym polu oraz dwa pociągi, które zamieniły się polami (A→B i B→A w tym
+samym kroku).
+
+**Dlaczego druga reguła:** DESIGN sekcja 2 mówi o kolizji „na tym samym polu/krawędzi". Zamiana
+miejsc nie daje wspólnego pola w żadnym kroku — pociągi mijają się w środku krawędzi i samo
+porównywanie pozycji jej nie wykryje. Bez tej reguły dwa pociągi jadące na siebie po torze o
+parzystej długości przenikałyby się nawzajem.
+
+**Kolejność sprawdzeń:** własna porażka pociągu (ślepy tor, zła stacja, brak wyjazdu) jest
+zgłaszana przed kolizją. Kolizja to zdarzenie między dwoma poprawnie jadącymi pociągami.
+
+**Krok kolizyjny trafia do logu**, więc animacja pokaże moment zderzenia, a nie zatrzyma pociągi
+krok wcześniej.

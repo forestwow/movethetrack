@@ -32,6 +32,11 @@ static func simulate(grid: GridModel, level: LevelData) -> SimulationResult:
 			step[train.id] = state["cell"]
 			moved = moved or state["cell"] != previous[train.id]
 
+		if problem == SimulationResult.Outcome.SUCCESS:
+			failed_id = _find_collision(previous, step)
+			if not failed_id.is_empty():
+				problem = SimulationResult.Outcome.COLLISION
+
 		if moved:
 			result.steps.append(step)
 		if problem != SimulationResult.Outcome.SUCCESS:
@@ -76,6 +81,19 @@ static func _edge_towards(from: Vector2i, to: Vector2i) -> int:
 		if from + TrackPiece.direction(edge) == to:
 			return edge
 	return -1
+
+
+static func _find_collision(previous: Dictionary, current: Dictionary) -> String:
+	var ids := current.keys()
+	for i in ids.size():
+		for j in range(i + 1, ids.size()):
+			var a = ids[i]
+			var b = ids[j]
+			if current[a] == current[b]:
+				return a
+			if current[a] == previous[b] and current[b] == previous[a]:
+				return a
+	return ""
 
 
 static func _all_done(states: Dictionary) -> bool:
