@@ -273,11 +273,21 @@ tylko indeks — dzięki temu konfiguracja nie może się zdezaktualizować po z
 ustawioną trasę pełnymi szynami, a nieaktywną gałąź przyciemnionymi — gracz widzi trasę przed
 wciśnięciem „Graj", zgodnie z DESIGN sekcją 4.
 
-**Poprawka wskaźnika:** pierwsza wersja rysowała samą żółtą linię między iglicą a nastawą i była
-myląca — konfiguracje „iglica N, nastawa E" oraz „iglica E, nastawa N" wyglądały identycznie, choć
-zachowują się zupełnie inaczej. Sześć konfiguracji dawało trzy obrazki, więc gracz przeklikiwał
-rozjazd i wnioskował, że żadna nie działa. Linia ma teraz **grot na ramieniu nastawy** — ogon
-wskazuje iglicę, grot kierunek jazdy ostrzem. Sześć konfiguracji, sześć różnych obrazków.
+**Wskaźnik przeszedł dwie poprawki, obie po realnym pomyleniu się gracza:**
+
+1. Pierwsza wersja rysowała samą linię między iglicą a nastawą. Konfiguracje „iglica N, nastawa E"
+   i „iglica E, nastawa N" wyglądały identycznie, choć zachowują się odwrotnie — sześć konfiguracji
+   dawało trzy obrazki.
+2. Dodanie grotu na ramieniu nastawy rozróżniło je, ale nadal opisywało tylko jazdę ostrzem.
+   Gracz naturalnie ustawiał grot tam, gdzie *chciał* skierować pociąg, mimo że przy wjeździe
+   z gałęzi nastawa nie ma znaczenia. Do tego przyciemnione szyny trzeciego ramienia sugerowały
+   „tędy się nie da", podczas gdy właśnie tędy pociąg swobodnie przejeżdża.
+
+**Obecna postać rysuje wszystkie trzy przejazdy, bo tyle ich jest.** Trasa iglica↔nastawa to jasna
+linia bez grotu (przejezdna w obie strony: od iglicy jedzie się na nastawę, od nastawy na iglicę).
+Trzecie ramię dostaje ciemniejszą bursztynową linię z grotem skierowanym do środka, kończącą się
+na iglicy — „stąd się wtapiasz". Szyny wszystkich ramion są rysowane normalnie, bo żadne nie jest
+nieprzejezdne.
 
 **Limit krawędzi na komórkę** przestał być stałą i wynika z `available_tools` poziomu: 3 gdy
 odblokowany jest `switch`, w przeciwnym razie 2.

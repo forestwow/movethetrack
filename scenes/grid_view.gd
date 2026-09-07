@@ -10,8 +10,8 @@ const GRASS_LINE := Color("#568139")
 const BALLAST := Color("#8f8676")
 const SLEEPER := Color("#5e4129")
 const RAIL := Color("#e6e6da")
-const RAIL_IDLE := Color("#6b6559")
-const ROUTE := Color("#f4d97a")
+const ROUTE := Color("#f7dc7d")
+const ROUTE_MERGE := Color("#c19a34")
 
 const TUFTS := [
 	[Vector2(14, 22), Vector2(52, 46), Vector2(33, 63)],
@@ -175,14 +175,12 @@ func _draw_rails(cell: Vector2i) -> void:
 		for distance in [0.26, 0.62, 0.96]:
 			var at: Vector2 = center + dir * CELL / 2.0 * distance
 			draw_line(at - perp * CELL * 0.145, at + perp * CELL * 0.145, SLEEPER, 5.0)
-	var routed := _routed_edges(cell, edges)
 	for edge in edges:
 		var dir := Vector2(TrackPiece.direction(edge))
 		var perp := Vector2(-dir.y, dir.x)
-		var color: Color = RAIL if routed.has(edge) else RAIL_IDLE
 		for side in [-1.0, 1.0]:
 			var from: Vector2 = center + perp * offset * side
-			draw_line(from, from + dir * CELL / 2.0, color, 3.0)
+			draw_line(from, from + dir * CELL / 2.0, RAIL, 3.0)
 
 
 func _draw_route(cell: Vector2i) -> void:
@@ -192,23 +190,25 @@ func _draw_route(cell: Vector2i) -> void:
 	var center := cell_center(cell)
 	var toe := Vector2(TrackPiece.direction(config["toe"]))
 	var setting := Vector2(TrackPiece.direction(config["setting"]))
+
+	for edge in _edges_of(cell):
+		if edge == config["toe"] or edge == config["setting"]:
+			continue
+		var merging := Vector2(TrackPiece.direction(edge))
+		draw_polyline(PackedVector2Array([
+			center + merging * CELL / 2.0, center, center + toe * CELL / 2.0,
+		]), ROUTE_MERGE, 3.0)
+		_draw_arrow(center + merging * CELL * 0.3, -merging, ROUTE_MERGE)
+
 	draw_polyline(PackedVector2Array([
 		center + toe * CELL / 2.0, center, center + setting * CELL / 2.0,
 	]), ROUTE, 3.0)
 
-	var side := Vector2(-setting.y, setting.x) * CELL * 0.08
-	draw_colored_polygon(PackedVector2Array([
-		center + setting * CELL * 0.46,
-		center + setting * CELL * 0.28 + side,
-		center + setting * CELL * 0.28 - side,
-	]), ROUTE)
 
-
-func _routed_edges(cell: Vector2i, edges: Array) -> Array:
-	var config := grid.get_switch(cell)
-	if config.is_empty():
-		return edges
-	return [config["toe"], config["setting"]]
+func _draw_arrow(tip: Vector2, dir: Vector2, color: Color) -> void:
+	var back := tip - dir * CELL * 0.13
+	var side := Vector2(-dir.y, dir.x) * CELL * 0.075
+	draw_colored_polygon(PackedVector2Array([tip, back + side, back - side]), color)
 
 
 func _draw_tree(cell: Vector2i) -> void:
