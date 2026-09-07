@@ -1,7 +1,7 @@
 class_name GridView
 extends Node2D
 
-const CELL := 64
+const CELL := 80
 
 const BACKGROUND := Color("#161a23")
 const GRID_LINE := Color("#252b38")
