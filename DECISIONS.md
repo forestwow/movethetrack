@@ -143,3 +143,29 @@ z kolorem stacji, na której ten pociąg stoi, i trzeba by to walidować.
 **Dlaczego:** GUT 9.7 i tak traktuje każde niezapowiedziane `push_error()` jako niepowodzenie
 testu, więc trzeba je jawnie skonsumować. Przy okazji test sprawdza, czy odrzucenie nastąpiło
 z właściwego powodu, a nie przypadkiem z innego — przy 22 przypadkach błędnych to realna różnica.
+
+## D13 — Wynik `LOOP` jest dziś nieosiągalny, ale zostaje jako bezpiecznik
+
+**Ustalenie:** `SimulationEngine` przerywa symulację po przekroczeniu limitu kroków
+(liczba kafelków z torem + 2) i zwraca `Outcome.LOOP`. Przy obecnym `MAX_EDGES_PER_CELL = 2`
+żaden układ toru nie potrafi tego wywołać.
+
+**Dlaczego jest nieosiągalny:** komórka z dwiema krawędziami ma dokładnie jedną parę wjazd-wyjazd,
+więc pociąg nie może odwiedzić jej dwa razy. Zamknięta pętla połączona z torem od stacji
+wymagałaby komórki z trzema krawędziami — a takiej `GridModel` nie pozwala postawić. Test, który
+próbował zbudować pętlę, kończył się na `can_connect_cells()` zwracającym `false`; został
+przepisany na sprawdzenie właśnie tego.
+
+**Dlaczego mimo to zostaje:** skrzyżowanie (M13) podnosi limit do 4 krawędzi i wtedy pętla staje
+się budowalna. Do tego czasu limit kroków chroni przed zawieszeniem gry, gdyby błąd w symulacji
+wprowadził pociąg w nieskończony cykl — pętla w `while` bez wyjścia zawiesiłaby cały proces Godota,
+nie tylko poziom.
+
+## D14 — Podgląd trasy to zwykłe `simulate()`, bez osobnego API
+
+**Zamyka:** otwarte pytanie z TECH_SPEC sekcji 6 o funkcję „dry-run" w `SimulationEngine`.
+
+**Ustalenie:** `SimulationEngine.simulate()` jest czystą funkcją bez efektów ubocznych i zwraca
+pełny log pozycji (`SimulationResult.steps`). Podgląd trasy przed wciśnięciem „Graj" to po prostu
+wywołanie `simulate()` i narysowanie `get_path(train_id)` — ta sama funkcja, którą potem odtwarza
+animacja. Osobne API byłoby drugą implementacją tej samej logiki, czyli drugim miejscem na błąd.

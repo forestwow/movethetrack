@@ -71,3 +71,37 @@ func test_a_track_ending_in_the_middle_fails():
 	var result := SimulationEngine.simulate(grid, level)
 	assert_eq(result.outcome, SimulationResult.Outcome.DEAD_END)
 	assert_eq(result.get_path("train_1"), [A, Vector2i(3, 4), Vector2i(4, 4)])
+
+
+func test_two_tracks_leaving_the_source_station_is_ambiguous():
+	grid.connect_cells(A, Vector2i(3, 4))
+	grid.connect_cells(A, Vector2i(2, 3))
+	var result := SimulationEngine.simulate(grid, level)
+	assert_eq(result.outcome, SimulationResult.Outcome.AMBIGUOUS_DEPARTURE)
+	assert_eq(result.get_path("train_1"), [A])
+
+
+func test_two_tracks_entering_the_target_station_are_fine():
+	_build_straight_line()
+	grid.connect_cells(Vector2i(7, 3), B)
+	var result := SimulationEngine.simulate(grid, level)
+	assert_eq(result.outcome, SimulationResult.Outcome.SUCCESS)
+
+
+func test_arriving_at_a_station_that_is_not_the_target_fails():
+	var wrong := LevelData.load_from_file("res://tests/fixtures/level_three_stations.json")
+	var wrong_grid := wrong.create_grid()
+	wrong_grid.connect_cells(Vector2i(0, 0), Vector2i(1, 0))
+	wrong_grid.connect_cells(Vector2i(1, 0), Vector2i(2, 0))
+	var result := SimulationEngine.simulate(wrong_grid, wrong)
+	assert_eq(result.outcome, SimulationResult.Outcome.WRONG_STATION)
+	assert_eq(result.get_path("train_1"), [Vector2i(0, 0), Vector2i(1, 0), Vector2i(2, 0)])
+
+
+func test_a_loop_cannot_be_built_while_cells_hold_two_edges():
+	grid.connect_cells(A, Vector2i(3, 4))
+	grid.connect_cells(Vector2i(3, 4), Vector2i(3, 3))
+	grid.connect_cells(Vector2i(3, 3), Vector2i(4, 3))
+	grid.connect_cells(Vector2i(4, 3), Vector2i(4, 4))
+	assert_false(grid.can_connect_cells(Vector2i(4, 4), Vector2i(3, 4)))
+	assert_eq(SimulationEngine.simulate(grid, level).outcome, SimulationResult.Outcome.DEAD_END)
