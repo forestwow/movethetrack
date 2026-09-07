@@ -1,0 +1,10 @@
+config_version=5
+
+[application]
+
+config/name="Move The Track"
+config/features=PackedStringArray("4.7", "GDScript")
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/gut/plugin.cfg")
