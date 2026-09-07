@@ -91,10 +91,9 @@ func _refresh_budget() -> void:
 
 
 func _refresh_preview() -> void:
-	var result := SimulationEngine.simulate(grid, level)
 	var routes := {}
 	for train in level.trains:
-		routes[train.id] = result.get_path(train.id)
+		routes[train.id] = SimulationEngine.route(grid, level, train)
 	view.show_routes(routes)
 
 

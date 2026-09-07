@@ -329,5 +329,15 @@ pojedzie pociąg. Podgląd odpowiada wprost na to pytanie, a rozjazd staje się 
 efekt widać natychmiast. Przy złej nastawie czerwona linia skręca w niewłaściwą stronę i urywa się
 w miejscu kolizji, zamiast dobiec do stacji.
 
-**Koszt:** zero zmian w `core/`. `simulate()` jest czystą funkcją bez efektów ubocznych, więc
-przeliczanie go po każdej zmianie kafelka jest bezpieczne i przy planszy 10×10 niezauważalne.
+**Koszt:** `simulate()` jest czystą funkcją bez efektów ubocznych, więc przeliczanie go po każdej
+zmianie kafelka jest bezpieczne i przy planszy 10×10 niezauważalne.
+
+**Poprawka: podgląd liczy każdą trasę w izolacji.** Pierwsza wersja używała pełnego
+`simulate()`, więc przy kolizji obie linie urywały się w miejscu zderzenia — a to zdradzało
+warstwę **czasową**, nie przestrzenną. DESIGN sekcja 4 obiecuje graczowi wiedzę o tym, *którędy*
+pojedzie pociąg; kiedy dwa składy znajdą się na tym samym polu, to już zagadka, na której stoi
+`level_05` (patrz [[D21]]) i której rozwiązaniem jest objazd. Podgląd korzysta teraz z
+`SimulationEngine.route()`, przechodzącego jeden pociąg bez sprawdzania pozostałych. Błędy
+topologiczne — zła nastawa, ślepy tor, zła stacja, za mały budżet — nadal widać od razu; kolizja
+wraca jako to, co odkrywasz, wciskając „Graj", zgodnie z „jednym, w pełni zsynchronizowanym
+przejazdem" z DESIGN sekcji 1.

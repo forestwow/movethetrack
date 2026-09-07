@@ -105,3 +105,28 @@ func test_a_loop_cannot_be_built_while_cells_hold_two_edges():
 	grid.connect_cells(Vector2i(4, 3), Vector2i(4, 4))
 	assert_false(grid.can_connect_cells(Vector2i(4, 4), Vector2i(3, 4)))
 	assert_eq(SimulationEngine.simulate(grid, level).outcome, SimulationResult.Outcome.DEAD_END)
+
+
+func test_route_walks_a_single_train_to_its_station():
+	_build_straight_line()
+	var train: Train = level.trains[0]
+	assert_eq(SimulationEngine.route(grid, level, train), [
+		A, Vector2i(3, 4), Vector2i(4, 4), Vector2i(5, 4), Vector2i(6, 4), B,
+	])
+
+
+func test_route_stops_where_the_track_stops():
+	grid.connect_cells(A, Vector2i(3, 4))
+	grid.connect_cells(Vector2i(3, 4), Vector2i(4, 4))
+	var train: Train = level.trains[0]
+	assert_eq(SimulationEngine.route(grid, level, train), [A, Vector2i(3, 4), Vector2i(4, 4)])
+
+
+func test_route_reaches_the_wrong_station_when_the_track_leads_there():
+	var wrong := LevelData.load_from_file("res://tests/fixtures/level_three_stations.json")
+	var wrong_grid := wrong.create_grid()
+	wrong_grid.connect_cells(Vector2i(0, 0), Vector2i(1, 0))
+	wrong_grid.connect_cells(Vector2i(1, 0), Vector2i(2, 0))
+	assert_eq(SimulationEngine.route(wrong_grid, wrong, wrong.trains[0]), [
+		Vector2i(0, 0), Vector2i(1, 0), Vector2i(2, 0),
+	])

@@ -96,3 +96,15 @@ func test_the_author_layout_fails_with_the_toe_on_the_wrong_arm():
 	grid.set_switch(EAST_JUNCTION, N, E)
 	var result := SimulationEngine.simulate(grid, level)
 	assert_eq(result.outcome, SimulationResult.Outcome.WRONG_STATION)
+
+
+func test_route_preview_ignores_the_other_train():
+	_lay(MAIN_LINE)
+	_lay([[9, 3], [8, 3], [7, 3], [7, 4], [7, 5]])
+	_lay(EXIT)
+	grid.set_switch(WEST_JUNCTION, E, N)
+	grid.set_switch(EAST_JUNCTION, W, E)
+
+	assert_eq(SimulationEngine.simulate(grid, level).outcome, SimulationResult.Outcome.COLLISION)
+	assert_eq(SimulationEngine.route(grid, level, level.trains[0]).back(), Vector2i(9, 5))
+	assert_eq(SimulationEngine.route(grid, level, level.trains[1]).back(), Vector2i(0, 3))

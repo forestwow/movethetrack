@@ -45,6 +45,22 @@ static func simulate(grid: GridModel, level: LevelData) -> SimulationResult:
 	return result
 
 
+static func route(grid: GridModel, level: LevelData, train: Train) -> Array[Vector2i]:
+	var source := level.get_station(train.start_station_id)
+	var state := {"cell": source.cell, "entry": -1, "done": false}
+	var path: Array[Vector2i] = [source.cell]
+	var max_steps := grid.get_used_budget() * grid.max_edges_per_cell + 2
+
+	while not state["done"] and path.size() <= max_steps:
+		var problem := _advance(grid, train, state)
+		if state["cell"] != path[-1]:
+			path.append(state["cell"])
+		if problem != SimulationResult.Outcome.SUCCESS:
+			break
+
+	return path
+
+
 static func _advance(grid: GridModel, train: Train, state: Dictionary) -> SimulationResult.Outcome:
 	var cell: Vector2i = state["cell"]
 	var exit_edge := -1
