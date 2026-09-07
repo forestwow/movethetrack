@@ -1,6 +1,7 @@
 extends CanvasLayer
 
 signal play_pressed
+signal reset_pressed
 
 const HEIGHT := 80
 const BAR := Color("#11141b")
@@ -8,6 +9,7 @@ const BAR := Color("#11141b")
 var _budget_label: Label
 var _status_label: Label
 var _play_button: Button
+var _reset_button: Button
 
 
 func _ready() -> void:
@@ -34,6 +36,13 @@ func _ready() -> void:
 	_play_button.pressed.connect(func(): play_pressed.emit())
 	add_child(_play_button)
 
+	_reset_button = Button.new()
+	_reset_button.text = "Reset"
+	_reset_button.position = Vector2(width - 208, 22)
+	_reset_button.size = Vector2(92, 36)
+	_reset_button.pressed.connect(func(): reset_pressed.emit())
+	add_child(_reset_button)
+
 
 func show_budget(used: int, total: int) -> void:
 	_budget_label.text = "Segments  %d / %d" % [used, total]
@@ -43,5 +52,6 @@ func show_status(text: String) -> void:
 	_status_label.text = text
 
 
-func set_play_enabled(enabled: bool) -> void:
+func set_buttons_enabled(enabled: bool) -> void:
 	_play_button.disabled = not enabled
+	_reset_button.disabled = not enabled

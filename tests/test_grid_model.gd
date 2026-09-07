@@ -153,3 +153,29 @@ func test_lists_its_stations_obstacles_and_track_cells():
 	assert_eq(grid.get_stations().size(), 1)
 	assert_eq(grid.get_obstacles(), [Vector2i(5, 5)])
 	assert_eq(grid.get_track_cells(), [Vector2i(8, 8), Vector2i(8, 9)])
+
+
+func test_clear_track_removes_everything_and_frees_the_budget():
+	grid.add_station(Station.new("A", Vector2i(0, 0), "red", Station.Role.SOURCE))
+	grid.add_obstacle(Vector2i(5, 5))
+	grid.connect_cells(Vector2i(0, 0), Vector2i(0, 1))
+	grid.connect_cells(Vector2i(0, 1), Vector2i(0, 2))
+	grid.clear_track()
+	assert_eq(grid.get_track_cells(), [])
+	assert_eq(grid.get_used_budget(), 0)
+	assert_eq(grid.get_station_exits(Vector2i(0, 0)), [])
+	assert_eq(grid.get_stations().size(), 1)
+	assert_eq(grid.get_obstacles(), [Vector2i(5, 5)])
+
+
+func test_clear_track_announces_every_cleared_cell():
+	grid.connect_cells(Vector2i(0, 0), Vector2i(0, 1))
+	watch_signals(grid)
+	grid.clear_track()
+	assert_signal_emit_count(grid, "track_changed", 2)
+
+
+func test_clear_track_on_an_empty_grid_announces_nothing():
+	watch_signals(grid)
+	grid.clear_track()
+	assert_signal_not_emitted(grid, "track_changed")

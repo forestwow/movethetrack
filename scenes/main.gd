@@ -31,6 +31,7 @@ func _ready() -> void:
 	_timer.wait_time = STEP_SECONDS
 	_timer.timeout.connect(_on_step)
 	hud.play_pressed.connect(_on_play_pressed)
+	hud.reset_pressed.connect(_on_reset_pressed)
 
 	for file_name in DirAccess.get_files_at(LEVELS_DIR):
 		if file_name.ends_with(".json"):
@@ -56,9 +57,14 @@ func _load_level() -> void:
 
 func _enter_build_phase(status: String) -> void:
 	view.editable = true
-	hud.set_play_enabled(true)
+	hud.set_buttons_enabled(true)
 	hud.show_status(status)
 	_refresh_budget()
+
+
+func _on_reset_pressed() -> void:
+	grid.clear_track()
+	hud.show_status("Track cleared")
 
 
 func _on_track_changed(_cell: Vector2i) -> void:
@@ -73,7 +79,7 @@ func _on_play_pressed() -> void:
 	_result = SimulationEngine.simulate(grid, level)
 	_step = 0
 	view.editable = false
-	hud.set_play_enabled(false)
+	hud.set_buttons_enabled(false)
 	hud.show_status("Running")
 	view.show_trains(_result.steps[0])
 	_timer.start()

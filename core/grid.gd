@@ -154,6 +154,13 @@ func _is_full(cell: Vector2i) -> bool:
 	return not is_station(cell) and _edge_count(cell) >= MAX_EDGES_PER_CELL
 
 
+func clear_track() -> void:
+	var cleared := get_track_cells()
+	_edges.clear()
+	for cell in cleared:
+		track_changed.emit(cell)
+
+
 func _edge_towards(from: Vector2i, to: Vector2i) -> int:
 	for edge in TrackPiece.Edge.values():
 		if from + TrackPiece.direction(edge) == to:
