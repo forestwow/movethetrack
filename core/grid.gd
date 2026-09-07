@@ -1,6 +1,8 @@
 class_name GridModel
 extends RefCounted
 
+signal track_changed(cell: Vector2i)
+
 const MAX_EDGES_PER_CELL := 2
 
 var width: int
@@ -69,7 +71,7 @@ func can_connect_cells(from: Vector2i, to: Vector2i) -> bool:
 		return false
 	if _edge_count(from) >= MAX_EDGES_PER_CELL or _edge_count(to) >= MAX_EDGES_PER_CELL:
 		return false
-	return true
+	return _new_cell_cost(from, to) <= get_budget_remaining()
 
 
 func connect_cells(from: Vector2i, to: Vector2i) -> bool:
@@ -78,15 +80,33 @@ func connect_cells(from: Vector2i, to: Vector2i) -> bool:
 	var edge := _edge_towards(from, to)
 	_add_edge(from, edge)
 	_add_edge(to, TrackPiece.opposite(edge))
+	track_changed.emit(from)
+	track_changed.emit(to)
 	return true
 
 
 func remove_track(cell: Vector2i) -> void:
 	if not has_track(cell):
 		return
+	var neighbours := _edges_of(cell).map(func(edge): return cell + TrackPiece.direction(edge))
 	for edge in _edges_of(cell):
 		_remove_edge(cell + TrackPiece.direction(edge), TrackPiece.opposite(edge))
 	_edges.erase(cell)
+	track_changed.emit(cell)
+	for neighbour in neighbours:
+		track_changed.emit(neighbour)
+
+
+func get_used_budget() -> int:
+	return _edges.size()
+
+
+func get_budget_remaining() -> int:
+	return segment_budget - get_used_budget()
+
+
+func _new_cell_cost(from: Vector2i, to: Vector2i) -> int:
+	return int(not has_track(from)) + int(not has_track(to))
 
 
 func _edge_towards(from: Vector2i, to: Vector2i) -> int:

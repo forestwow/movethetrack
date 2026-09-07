@@ -78,3 +78,16 @@ osobne byty.
 
 **Dlaczego:** zgodność z konwencją współrzędnych ekranu w Godocie i z przykładami JSON w
 TECH_SPEC sekcji 4.
+
+## D8 — Komórka istnieje tylko dopóki ma choć jedno połączenie
+
+**Ustalenie:** `remove_track(cell)` czyści lustrzane krawędzie u sąsiadów. Sąsiad, któremu po tej
+operacji nie zostaje żadne połączenie, sam znika z planszy i zwalnia budżet.
+
+**Dlaczego:** stan „kafelek z torem, ale bez żadnej krawędzi" nie ma reprezentacji wizualnej ani
+znaczenia dla symulacji — byłby niewidzialnym pożeraczem budżetu. Konsekwencja: usunięcie jednego
+z dwóch kafelków dwuelementowego toru kasuje oba, ale usunięcie środka dłuższego toru zabiera
+tylko ten jeden kafelek, bo sąsiedzi mają jeszcze inne połączenia.
+
+**Skąd się wzięło:** dwa testy M2b zakładały odwrotnie i padły. Analiza pokazała, że błędne było
+oczekiwanie w teście, nie implementacja.
