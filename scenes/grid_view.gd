@@ -41,6 +41,7 @@ var _drag_cell := NO_CELL
 var _press_cell := NO_CELL
 var _dragged := false
 var _train_colors := {}
+var _routes := {}
 var _train_cells := {}
 var _train_headings := {}
 
@@ -55,6 +56,11 @@ func set_grid(new_grid: GridModel) -> void:
 
 func set_train_colors(colors: Dictionary) -> void:
 	_train_colors = colors
+
+
+func show_routes(routes: Dictionary) -> void:
+	_routes = routes
+	queue_redraw()
 
 
 func show_trains(cells: Dictionary) -> void:
@@ -129,6 +135,7 @@ func _draw() -> void:
 		_draw_route(cell)
 	for station in grid.get_stations():
 		_draw_station(station)
+	_draw_routes()
 	for train_id in _train_cells:
 		_draw_train(train_id, _train_cells[train_id])
 
@@ -203,6 +210,23 @@ func _draw_route(cell: Vector2i) -> void:
 	draw_polyline(PackedVector2Array([
 		center + toe * CELL / 2.0, center, center + setting * CELL / 2.0,
 	]), ROUTE, 3.0)
+
+
+func _draw_routes() -> void:
+	var index := 0
+	for train_id in _routes:
+		var path: Array = _routes[train_id]
+		var shift := Vector2.ONE * (index - (_routes.size() - 1) / 2.0) * 8.0
+		var color: Color = COLORS.get(_train_colors.get(train_id, ""), Color.WHITE)
+		index += 1
+		if path.size() < 2:
+			continue
+
+		var points := PackedVector2Array()
+		for cell in path:
+			points.append(cell_center(cell) + shift)
+		draw_polyline(points, Color(color, 0.55), 9.0)
+		draw_circle(points[-1], 7.0, Color(color, 0.85))
 
 
 func _draw_arrow(tip: Vector2, dir: Vector2, color: Color) -> void:

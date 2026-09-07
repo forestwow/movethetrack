@@ -68,6 +68,7 @@ func _enter_build_phase(status: String) -> void:
 	hud.set_buttons_enabled(true)
 	hud.show_status(status)
 	_refresh_budget()
+	_refresh_preview()
 
 
 func _on_level_step_requested(delta: int) -> void:
@@ -82,16 +83,26 @@ func _on_reset_pressed() -> void:
 
 func _on_track_changed(_cell: Vector2i) -> void:
 	_refresh_budget()
+	_refresh_preview()
 
 
 func _refresh_budget() -> void:
 	hud.show_budget(grid.get_used_budget(), grid.segment_budget)
 
 
+func _refresh_preview() -> void:
+	var result := SimulationEngine.simulate(grid, level)
+	var routes := {}
+	for train in level.trains:
+		routes[train.id] = result.get_path(train.id)
+	view.show_routes(routes)
+
+
 func _on_play_pressed() -> void:
 	_result = SimulationEngine.simulate(grid, level)
 	_step = 0
 	view.editable = false
+	view.show_routes({})
 	hud.set_buttons_enabled(false)
 	hud.show_status("Running")
 	view.show_trains(_result.steps[0])

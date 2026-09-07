@@ -311,3 +311,23 @@ pary krawędzi, więc nie rozdziela tras — potrzebny był rozjazd.
 przeciwnych kierunkach. Gracz musi wydłużyć trasę jednego z nich objazdem, żeby drugi zdążył
 opuścić korytarz. Test `test_without_the_detour_the_trains_collide_in_the_corridor` pokazuje, że
 najkrótszy dojazd kończy się kolizją — objazd nie jest ozdobą, tylko rozwiązaniem.
+
+## D22 — Podgląd tras rysowany na żywo podczas budowy
+
+**Realizuje:** wymaganie z DESIGN sekcji 4 („gracz widzi, którędy pojedzie pociąg, jeszcze przed
+wciśnięciem Graj"), które do tej pory nie było zaimplementowane. Korzysta z [[D14]].
+
+**Ustalenie:** po każdej zmianie toru i po każdym przestawieniu rozjazdu `Main` wywołuje
+`SimulationEngine.simulate()` i przekazuje widokowi trasę każdego pociągu. `GridView` rysuje je
+grubą półprzezroczystą linią w kolorze pociągu, z lekkim przesunięciem per pociąg, żeby na
+wspólnym torze obie były widoczne. Kropka na końcu linii oznacza miejsce, w którym przejazd się
+kończy. Podgląd znika na czas symulacji.
+
+**Dlaczego to, a nie kolejna poprawka wskaźnika rozjazdu:** dwie iteracje nad rysowaniem iglicy i
+nastawy nie rozwiązały problemu, bo gracz nie musi rozumieć rozjazdu — musi wiedzieć, dokąd
+pojedzie pociąg. Podgląd odpowiada wprost na to pytanie, a rozjazd staje się pokrętłem, którego
+efekt widać natychmiast. Przy złej nastawie czerwona linia skręca w niewłaściwą stronę i urywa się
+w miejscu kolizji, zamiast dobiec do stacji.
+
+**Koszt:** zero zmian w `core/`. `simulate()` jest czystą funkcją bez efektów ubocznych, więc
+przeliczanie go po każdej zmianie kafelka jest bezpieczne i przy planszy 10×10 niezauważalne.
